@@ -9,7 +9,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, Conv1D, GlobalMaxPooling1D, Dense, Dropout
 
 # --- Configurações de Arquivos ---
-LEGITIMATE_URLS_FILE = 'sites_legitimos.txt'
+LEGITIMATE_URLS_FILE = 'sites_legitimos_limpos.txt'
 PHISHING_URLS_FILE = 'phishing_urls_openphish.txt'
 
 # --- Parâmetros da Rede Neural ---
