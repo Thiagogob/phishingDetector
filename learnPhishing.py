@@ -7,6 +7,8 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, Conv1D, GlobalMaxPooling1D, Dense, Dropout
+import os
+import pickle # Importar pickle para salvar o tokenizer
 
 # --- Configurações de Arquivos ---
 LEGITIMATE_URLS_FILE = 'sites_legitimos_limpos.txt'
@@ -52,8 +54,10 @@ if len(phishing_data_full) < TARGET_SAMPLE_COUNT:
     print(f"Aviso: Não há {TARGET_SAMPLE_COUNT} URLs de phishing disponíveis. Usando todas as {len(phishing_data_full)}.")
     selected_phishing_data = phishing_data_full
 else:
+    # Usar np.random.choice para selecionar aleatoriamente sem reposição
+    # Certifique-se de que phishing_data_full seja um array numpy para isso
     selected_phishing_data = np.random.choice(
-        phishing_data_full,
+        np.array(phishing_data_full, dtype=object), # Converter para array de objetos
         TARGET_SAMPLE_COUNT,
         replace=False
     ).tolist()
@@ -63,8 +67,9 @@ if len(legitimate_data_full) < TARGET_SAMPLE_COUNT:
     print(f"Aviso: Não há {TARGET_SAMPLE_COUNT} URLs legítimas disponíveis. Usando todas as {len(legitimate_data_full)}.")
     selected_legitimate_data = legitimate_data_full
 else:
+    # Usar np.random.choice para selecionar aleatoriamente sem reposição
     selected_legitimate_data = np.random.choice(
-        legitimate_data_full,
+        np.array(legitimate_data_full, dtype=object), # Converter para array de objetos
         TARGET_SAMPLE_COUNT,
         replace=False
     ).tolist()
@@ -91,8 +96,6 @@ urls = data['url'].tolist()
 labels = data['label'].values
 
 # Dividir em conjuntos de treinamento e teste
-# O test_size padrão é 0.25 (25%), então 1000 + 1000 = 2000 amostras
-# Com test_size=0.2, teremos 1600 para treino e 400 para teste
 X_train_urls, X_test_urls, y_train, y_test = train_test_split(
     urls, labels, test_size=0.2, random_state=42, stratify=labels
 )
@@ -162,6 +165,19 @@ print(f"F1-Score: {f1:.4f}")
 print("\nRelatório de Classificação:")
 print(classification_report(y_test, y_pred))
 
-# Após o treinamento
-model.save('url_phishing_detector_model.h5') # Salva o modelo em formato HDF5
-print("Modelo salvo como 'url_phishing_detector_model.h5'")
+# --- Salvar o Modelo e o Tokenizer ---
+MODEL_DIR = 'models'
+MODEL_PATH = os.path.join(MODEL_DIR, 'url_phishing_detector_model.h5')
+TOKENIZER_PATH = os.path.join(MODEL_DIR, 'tokenizer.pkl')
+
+# Cria o diretório 'models' se ele não existir
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+# Salva o modelo
+model.save(MODEL_PATH)
+print(f"Modelo salvo em '{MODEL_PATH}'")
+
+# Salva o tokenizer
+with open(TOKENIZER_PATH, 'wb') as f:
+    pickle.dump(tokenizer, f)
+print(f"Tokenizer salvo em '{TOKENIZER_PATH}'")
